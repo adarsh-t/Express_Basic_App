@@ -11,10 +11,10 @@ Step by step how to clone and run on your system
     c. run this command to install dependencies of package.json <br>
         <pre>    <b>npm install</b> </pre><br>
     d. run this command to run express app <br>
-        <pre>    <b>node ./bin/www<b> </pre><br>
+        <pre>    <b>node ./bin/www</b> </pre><br>
         
 3. Go to this address in your browser. <br>
-       <pre><b>http://localhost:3000/<pre> </b><br>
+       <pre><b> http://localhost:3000/ </b><pre> <br>
         
 3. your express app is running on port 3000 which is specified to <br>
        <pre><b> /Express_Basic_App/bin/www</b>

@@ -1,0 +1,46 @@
+<form class="form-horizontal" action='' method="POST" id="form_user">
+         <a class="btn btn-success"  style="float: right;" type="button" href="/form">Add User</a>
+
+    <div class="control-group">
+      <!-- Username -->
+      <label class="control-label" for="test">Keyword</label>
+      <div class="controls">
+        <input type="text" id="Keyword" name="Keyword" placeholder="" class="input-xlarge" required>
+       
+      </div>
+    </div>
+
+
+      <div class="control-group">
+      <!-- Button -->
+      <div class="controls">
+        <button class="btn btn-success">Search</button>
+      </div>
+    </div>
+</form>
+
+
+
+
+
+
+
+{{#if userdata}}
+<table style="width:100%">
+ <tr>
+    <th>name</th>
+    <th>mobile</th> 
+    <th>email</th>
+    <th>gender</th>
+
+  </tr>
+{{#each userdata}}
+ <tr>
+   <td>{{this.name}}</td> 
+    <td>{{this.mobile}}</td> 
+     <td>{{this.email}}</td> 
+      <td>{{this.gender}}</td> 
+  </tr>
+{{/each}}
+</table>
+{{/if}}

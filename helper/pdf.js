@@ -3,6 +3,7 @@ const fs = require('fs');
 const appRoot = require('app-root-path');
 const convertHTMLToPDF = require("pdf-puppeteer");
 const pdf = require("pdf-creator-node");
+const JsBarcode = require('jsbarcode');
 
 
 module.exports = {
@@ -75,75 +76,224 @@ module.exports = {
 
   },
   pdfhtml: async data => {
+
+
     return new Promise(function (resolve, reject) {
-      let data =
-        `<!DOCTYPE html>
-      <html>
-          <body>
-              <h1><img src="http://portwings.in/wp-content/uploads/2018/09/Page4-Mahindra.jpg"  height="100" width="100" />&nbsp;  &nbsp; &nbsp; Mahindra Logisitcs</h1>
-              <ul>
-                  {{#each users}}
-                  <li>Name: {{this.name}}</li>
-                  <li>Age: {{this.age}}</li>
-                  <br>
-              {{/each}}
-              </ul>
-          </body>
-      </html>`;
+      try {
+
+        //crate barcode image with text
+        var { createCanvas } = require("canvas");
+        var canvas = createCanvas();
+        JsBarcode(canvas, "2108298920", { format: "CODE39" });
+        const buf = canvas.toBuffer()
+
+        // Asynchronous PNG
+        canvas.toBuffer((err, buf) => {
+          if (err) throw err // encoding failed
+          let randomName = "file/images" + Math.random() + ".png";
+          var path = `/public/${randomName}`;
+
+          fs.writeFile(appRoot + path, buf, () => {
+            path = "http://localhost:3000/" + "file/a.png";
+            console.log(path);
+            let data =
+              `<!DOCTYPE html>
+        <html>
+            <body>
+                <h1><img src={{path}}  height="50" width="160" />&nbsp;  &nbsp; &nbsp; Mahindra Logisitcs</h1>
+                <ul>
+                    {{#each users}}
+                    <li>Name: {{this.name}}</li>
+                    <li>Age: {{this.age}}</li>
+                    <br>
+                {{/each}}
+                </ul>
+            </body>
+        </html>`;
+
+            console.log("@@@@@datatata", data)
+            var options = {
+              format: "A3",
+              orientation: "portrait",
+              border: "10mm",
+              header: {
+                height: "45mm",
+                contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
+              },
+              "footer": {
+                "height": "28mm",
+                "contents": {
+                  first: 'Cover page',
+                  2: 'Second page', // Any page number is working. 1-based index
+                  default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
+                  last: 'Last Page'
+                }
+              }
+            };
 
 
-      var options = {
-        format: "A3",
-        orientation: "portrait",
-        border: "10mm",
-        header: {
-          height: "45mm",
-          contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
-        },
-        "footer": {
-          "height": "28mm",
-          "contents": {
-            first: 'Cover page',
-            2: 'Second page', // Any page number is working. 1-based index
-            default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-            last: 'Last Page'
-          }
-        }
-      };
+            var users = [
+              {
+                name: "HARI",
+                age: "45"
+              },
+              {
+                name: "VIRAJ",
+                age: "26"
+              },
+              {
+                name: "UNMESH",
+                age: "26"
+              }
+            ]
+            var document = {
+              html: data,
+              data: {
+                users, path
+              },
+              path: appRoot + `/public/file/htmlPdf${Math.random()}.pdf`
+            };
 
+            console.log("%$$%$%%$$", document);
 
-      var users = [
-        {
-          name: "HARI",
-          age: "45"
-        },
-        {
-          name: "VIRAJ",
-          age: "26"
-        },
-        {
-          name: "UNMESH",
-          age: "26"
-        }
-      ]
-      var document = {
-        html: data,
-        data: {
-          users: users
-        },
-        path: appRoot + "/public/file/htmlPdf.pdf"
-      };
-
-      pdf.create(document, options)
-        .then(res => {
-          resolve();
-          console.log(res)
+            pdf.create(document, options)
+              .then(res => {
+                resolve();
+                console.log(res)
+              })
+              .catch(error => {
+                reject();
+                console.error(error)
+              });
+          });
         })
-        .catch(error => {
-          reject();
-          console.error(error)
+
+
+      } catch (error) {
+        reject(error);
+      }
+    })
+
+  },
+
+  barcode: async data => {
+    const bwipjs = require('bwip-js');
+    return new Promise((resolve, reject) => {
+      bwipjs.toBuffer({
+        bcid: 'code128',
+        text: "123322122",
+        scale: 3,
+        height: 10,
+        includetext: true,
+        textxalign: 'center'
+      }, async function (error, buffer) {
+        if (error) {
+          reject(error)
+        } else {
+          console.log("#######buffer", buffer);
+          //let gifBase64 = `data:image/gif;base64,${buffer.toString('base64')}`;
+          fs.writeFileSync(appRoot + `/public/file/a.png`, buffer);
+          resolve();
+        }
+      })
+    })
+  },
+
+  pdfWithData: async data => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const bwipjs = require('bwip-js');
+        let barcodeBuffer = await bwipjs.toBuffer({
+          bcid: 'code128',
+          text: "123322122",
+          scale: 3,
+          height: 10,
+          includetext: true,
+          textxalign: 'center'
         });
 
+        let name = `barcode${Math.random()}.png`;
+        let barcodePath = `${appRoot}/public/file/${name}`;
+        let url = `http://localhost:3000/file/${name}`;
+
+        fs.writeFileSync(barcodePath, barcodeBuffer);
+
+        //now create pdf and first define data
+        const users = [
+          {
+            name: "HARI",
+            age: "45"
+          },
+          {
+            name: "VIRAJ",
+            age: "26"
+          },
+          {
+            name: "UNMESH",
+            age: "26"
+          }
+        ];
+
+        let data =
+          `<!DOCTYPE html>
+        <html>
+            <body>
+                <h1><img src={{url}}  height="30" width="100" />&nbsp;  &nbsp; &nbsp; Mahindra Logisitcs</h1>
+                <ul>
+                    {{#each users}}
+                    <li>Name: {{this.name}}</li>
+                    <li>Age: {{this.age}}</li>
+                    <br>
+                {{/each}}
+                </ul>
+            </body>
+        </html>`;
+
+        console.log("@@@@@datatata", data)
+        var options = {
+          format: "A3",
+          orientation: "portrait",
+          border: "10mm",
+          header: {
+            height: "45mm",
+            contents: '<div style="text-align: center;">Author: Adarsh Tiwari</div>'
+          },
+          "footer": {
+            "height": "28mm",
+            "contents": {
+              first: 'Cover page',
+              2: 'Second page', // Any page number is working. 1-based index
+              default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
+              last: 'Last Page'
+            }
+          }
+        };
+
+
+
+        var document = {
+          html: data,
+          data: {
+            users, url
+          },
+          path:  `${appRoot}/public/file/htmlPdf${Math.random()}.pdf`
+        };
+
+        //create pdf
+        pdf.create(document, options)
+          .then(res => {
+            resolve();
+            console.log(res)
+          })
+          .catch(error => {
+            reject();
+            console.error(error)
+          });
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
     })
   }
 }

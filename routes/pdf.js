@@ -3,7 +3,10 @@ const router = express.Router();
 const createPdf = require('../helper/pdf.js');
 
 router.get('/', async function (req, res, next) {
-  await createPdf.pdfhtml();
+  // await createPdf.barcode();
+  // await createPdf.pdfhtml();
+  await createPdf.pdfWithData();
+  
   console.log("/////////////pdf end////////")
   return res.send({ msg: "done" });
 });
